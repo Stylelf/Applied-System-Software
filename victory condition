@@ -1,0 +1,64 @@
+
+PLAYER_NAMES = ["Player 1", "Player 2"]
+# Player names
+PLAYER_NAMES = ["Player 1", "Player 2"]
+
+# Main function of the game
+def main():
+    board = np.zeros((ROW_COUNT, COLUMN_COUNT))
+    print_board(board)
+    draw_board(board)  # Display the board right at the start of the game
+    turn = 0
+
+    # Main game loop
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEMOTION:
+                pygame.draw.rect(screen, BLACK, (0, 0, width, SQUARESIZE))
+                posx = event.pos[0]
+                pygame.draw.circle(screen, RED if turn == 0 else YELLOW, (posx, int(SQUARESIZE / 2)), RADIUS)
+                pygame.display.update()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pygame.draw.rect(screen, BLACK, (0, 0, width, SQUARESIZE))
+                # Ask Player 1 to play
+                if turn == 0:
+                    posx = event.pos[0]
+                    col = int(posx // SQUARESIZE)
+                    if is_valid_location(board, col):
+                        row = get_next_open_row(board, col)
+                        drop_piece(board, row, col, 1)
+                        if winning_move(board, 1):
+                            print(PLAYER_NAMES[0] + " wins!")
+                            pygame.quit()
+                            sys.exit()
+                    else:
+                        print("Column already full. Please choose another column.")
+                        continue
+
+                # Ask Player 2 to play
+                else:
+                    posx = event.pos[0]
+                    col = int(posx // SQUARESIZE)
+                    if is_valid_location(board, col):
+                        row = get_next_open_row(board, col)
+                        drop_piece(board, row, col, 2)
+                        if winning_move(board, 2):
+                            print(PLAYER_NAMES[1] + " wins!")
+                            pygame.quit()
+                            sys.exit()
+                    else:
+                        print("Column already full. Please choose another column.")
+                        continue
+
+                turn += 1
+                turn %= 2
+                print_board(board)
+                draw_board(board)
+
+if __name__ == "__main__":
+    main()
