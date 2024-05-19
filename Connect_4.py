@@ -2,16 +2,16 @@ import numpy as np
 import pygame
 import sys
 
-# Initialisation de Pygame
+# Initialize Pygame
 pygame.init()
 
-# Couleurs
+# Colors
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
 BLACK = (0, 0, 0)
 
-# Paramètres de la fenêtre
+# Window parameters
 ROW_COUNT = 6
 COLUMN_COUNT = 7
 SQUARESIZE = 100
@@ -20,10 +20,10 @@ width = COLUMN_COUNT * SQUARESIZE
 height = (ROW_COUNT + 1) * SQUARESIZE
 size = (width, height)
 
-# Création de la fenêtre
+# Create the window
 screen = pygame.display.set_mode(size)
 
-# Fonction pour dessiner la grille
+# Function to draw the board
 def draw_board(board):
     for c in range(COLUMN_COUNT):
         for r in range(ROW_COUNT):
@@ -38,37 +38,60 @@ def draw_board(board):
                 pygame.draw.circle(screen, YELLOW, (int(c * SQUARESIZE + SQUARESIZE / 2), height - int(r * SQUARESIZE + SQUARESIZE / 2)), RADIUS)
     pygame.display.update()
 
-# Fonction pour afficher le tableau dans la console
+# Function to print the board in the console
 def print_board(board):
     print(np.flip(board, 0))
 
-# Fonction pour vérifier si une colonne est valide
+# Function to check if a column is valid
 def is_valid_location(board, col):
     return board[ROW_COUNT - 1][col] == 0
 
-# Fonction pour obtenir la prochaine ligne ouverte dans une colonne
+# Function to get the next open row in a column
 def get_next_open_row(board, col):
     for r in range(ROW_COUNT):
         if board[r][col] == 0:
             return r
 
-# Fonction pour placer un jeton dans une colonne
+# Function to drop a piece in a column
 def drop_piece(board, row, col, piece):
     board[row][col] = piece
 
-# Fonction pour vérifier s'il y a une victoire
+# Function to check if there is a winning move
 def winning_move(board, piece):
-    # TODO: Implémenter la vérification de la victoire
+    # Check horizontal locations for win
+    for c in range(COLUMN_COUNT - 3):
+        for r in range(ROW_COUNT):
+            if board[r][c] == piece and board[r][c + 1] == piece and board[r][c + 2] == piece and board[r][c + 3] == piece:
+                return True
+
+    # Check vertical locations for win
+    for c in range(COLUMN_COUNT):
+        for r in range(ROW_COUNT - 3):
+            if board[r][c] == piece and board[r + 1][c] == piece and board[r + 2][c] == piece and board[r + 3][c] == piece:
+                return True
+
+    # Check positively sloped diagonals
+    for c in range(COLUMN_COUNT - 3):
+        for r in range(ROW_COUNT - 3):
+            if board[r][c] == piece and board[r + 1][c + 1] == piece and board[r + 2][c + 2] == piece and board[r + 3][c + 3] == piece:
+                return True
+
+    # Check negatively sloped diagonals
+    for c in range(COLUMN_COUNT - 3):
+        for r in range(3, ROW_COUNT):
+            if board[r][c] == piece and board[r - 1][c + 1] == piece and board[r - 2][c + 2] == piece and board[r - 3][c + 3] == piece:
+                return True
+
     return False
 
-# Fonction principale du jeu
+# Main function of the game
 def main():
     board = np.zeros((ROW_COUNT, COLUMN_COUNT))
     print_board(board)
-    draw_board(board)  # Afficher la grille dès le début du jeu
+    draw_board(board)  # Display the board right at the start of the game
     turn = 0
 
-    # Boucle principale du jeu
+    # Main game loop
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -83,40 +106,30 @@ def main():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pygame.draw.rect(screen, BLACK, (0, 0, width, SQUARESIZE))
-                # Demander au joueur 1 de jouer
-                if turn == 0:
-                    posx = event.pos[0]
-                    col = int(posx // SQUARESIZE)
-                    if is_valid_location(board, col):
-                        row = get_next_open_row(board, col)
-                        drop_piece(board, row, col, 1)
-                        if winning_move(board, 1):
-                            print("Player 1 wins!")
-                            pygame.quit()
-                            sys.exit()
-                    else:
-                        print("Colonne déjà remplie. Choisissez une autre colonne.")
-                        continue
+                posx = event.pos[0]
+                col = int(posx // SQUARESIZE)
 
-                # Demander au joueur 2 de jouer
+                if is_valid_location(board, col):
+                    row = get_next_open_row(board, col)
+                    drop_piece(board, row, col, 1 if turn == 0 else 2)
+
+                    if winning_move(board, 1 if turn == 0 else 2):
+                        draw_board(board)
+                        font = pygame.font.SysFont("monospace", 75)
+                        label = font.render(f"{PLAYER_NAMES[turn]} wins!", 1, RED if turn == 0 else YELLOW)
+                        screen.blit(label, (40, 10))
+                        pygame.display.update()
+                        pygame.time.wait(3000)
+                        pygame.quit()
+                        sys.exit()
+
+                    turn += 1
+                    turn %= 2
+                    print_board(board)
+                    draw_board(board)
                 else:
-                    posx = event.pos[0]
-                    col = int(posx // SQUARESIZE)
-                    if is_valid_location(board, col):
-                        row = get_next_open_row(board, col)
-                        drop_piece(board, row, col, 2)
-                        if winning_move(board, 2):
-                            print("Player 2 wins!")
-                            pygame.quit()
-                            sys.exit()
-                    else:
-                        print("Colonne déjà remplie. Choisissez une autre colonne.")
-                        continue
-
-                turn += 1
-                turn %= 2
-                print_board(board)
-                draw_board(board)
+                    print("Column already full. Please choose another column.")
 
 if __name__ == "__main__":
     main()
+
