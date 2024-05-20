@@ -83,6 +83,7 @@ def winning_move(board, piece):
                 return True
 
     return False
+    PLAYER_NAMES = ["Player 1", "Player 2"]
 
 # Main function of the game
 def main():
